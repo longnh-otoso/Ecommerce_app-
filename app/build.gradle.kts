@@ -1,15 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.google.services)
+    id("com.google.devtools.ksp")
+
+    id("com.google.dagger.hilt.android")
 }
+
 
 android {
     namespace = "com.example.ecommerceapp"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36 // Standardized compileSdk version
 
     defaultConfig {
         applicationId = "com.example.ecommerceapp"
@@ -56,15 +58,30 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-
     implementation("androidx.compose.material:material-icons-extended")
-
-    implementation("io.coil-kt.coil3:coil-compose:3.1.0") // Hoặc phiên bản mới nhất bạn đang dùng
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0") // Cần cái này để tải ảnh từ internet
-
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
 
     val nav_version = "2.9.8"
-
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
+    // Dagger Hilt (with KSP)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Room (with KSP)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
 }

@@ -15,99 +15,183 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.ecommerceapp.screens.cart.CartScreen
+import androidx.navigation.navArgument
+import com.example.ecommerceapp.feature.auth.presentation.AuthViewModel
+import com.example.ecommerceapp.feature.auth.presentation.LoginScreen
+import com.example.ecommerceapp.feature.auth.presentation.RegisterScreen
+import com.example.ecommerceapp.feature.cart.presentation.CartScreen
+import com.example.ecommerceapp.feature.cart.presentation.CartViewModel
+import com.example.ecommerceapp.feature.goods.presentation.ProductDetailScreen
+import com.example.ecommerceapp.feature.goods.presentation.ProductDetailViewModel
+import com.example.ecommerceapp.feature.home.presentation.HomeScreen
+import com.example.ecommerceapp.feature.home.presentation.HomeViewModel
 import com.example.ecommerceapp.screens.home.BottomNavigationBar
-import com.example.ecommerceapp.screens.home.HomeScreen
-import com.example.ecommerceapp.screens.profile.ProfileScreen
+import com.example.ecommerceapp.feature.order.presentation.OrderScreen
+import com.example.ecommerceapp.feature.order.presentation.OrderViewModel
+import com.example.ecommerceapp.feature.profile.presentation.ProfileScreen
+import com.example.ecommerceapp.feature.profile.presentation.ProfileViewModel
 import com.example.ecommerceapp.ui.theme.EcommerceAppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             EcommerceAppTheme {
+                val authViewModel: AuthViewModel = hiltViewModel()
+                val currentUser by authViewModel.currentUser.collectAsState()
+
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                Scaffold(
-                    bottomBar = {
-                        BottomNavigationBar(
-                            currentRoute = currentRoute,
-                            onNavigate = { route ->
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                ) { paddingValues ->
+                if (currentUser == null) {
+                    // Auth Gate: user is not signed in
                     NavHost(
                         navController = navController,
-                        startDestination = "Home",
-                        modifier = Modifier.padding(paddingValues)
+                        startDestination = "Login"
                     ) {
-                        composable("Home") {
-                            HomeScreen(
-                                onCartClick = {
-                                    navController.navigate("Cart") {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+                        composable("Login") {
+                            LoginScreen(
+                                viewModel = authViewModel,
+                                onNavigateToRegister = {
+                                    navController.navigate("Register")
                                 },
-                                onProfileClick = {
-                                    navController.navigate("Profile") {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
+                                onLoginSuccess = {} // StateFlow auto-triggers recomposition
+                            )
+                        }
+                        composable("Register") {
+                            RegisterScreen(
+                                viewModel = authViewModel,
+                                onNavigateToLogin = {
+                                    navController.popBackStack()
+                                },
+                                onRegisterSuccess = {} // StateFlow auto-triggers recomposition
+                            )
+                        }
+                    }
+                } else {
+                    // Main App Gate: user is signed in
+                    val mainTabs = listOf("Home", "Categories", "WishList", "Cart", "Profile")
+                    val showBottomBar = currentRoute in mainTabs
+
+                    Scaffold(
+                        bottomBar = {
+                            if (showBottomBar) {
+                                BottomNavigationBar(
+                                    currentRoute = currentRoute,
+                                    onNavigate = { route ->
+                                        navController.navigate(route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
-                        composable("Categories") {
-                            PlaceholderScreen(title = "Categories")
-                        }
-                        composable("WishList") {
-                            PlaceholderScreen(title = "WishList")
-                        }
-                        composable("Cart") {
-                            CartScreen(
-                                onBackClick = {
-                                    if (!navController.popBackStack()) {
-                                        navController.navigate("Home")
+                    ) { paddingValues ->
+                        val homeViewModel: HomeViewModel = hiltViewModel()
+                        val detailViewModel: ProductDetailViewModel = hiltViewModel()
+                        val cartViewModel: CartViewModel = hiltViewModel()
+                        val orderViewModel: OrderViewModel = hiltViewModel()
+                        val profileViewModel: ProfileViewModel = hiltViewModel()
+
+                        NavHost(
+                            navController = navController,
+                            startDestination = "Home",
+                            modifier = Modifier.padding(paddingValues)
+                        ) {
+                            composable("Home") {
+                                HomeScreen(
+                                    viewModel = homeViewModel,
+                                    onProductClick = { productId ->
+                                        navController.navigate("ProductDetails/$productId")
+                                    },
+                                    onCartClick = {
+                                        navController.navigate("Cart")
+                                    },
+                                    onProfileClick = {
+                                        navController.navigate("Profile")
                                     }
-                                }
-                            )
-                        }
-                        composable("Profile") {
-                            ProfileScreen(
-                                onSignOut = {
-                                    if (!navController.popBackStack()) {
-                                        navController.navigate("Home")
+                                )
+                            }
+                            composable("Categories") {
+                                PlaceholderScreen(title = "Categories")
+                            }
+                            composable("WishList") {
+                                PlaceholderScreen(title = "WishList")
+                            }
+                            composable("Cart") {
+                                CartScreen(
+                                    viewModel = cartViewModel,
+                                    onBackClick = {
+                                        if (!navController.popBackStack()) {
+                                            navController.navigate("Home")
+                                        }
+                                    },
+                                    onCheckoutClick = {
+                                        val items = cartViewModel.cartItems.value
+                                        val total = cartViewModel.totalAmount.value
+                                        orderViewModel.checkout(currentUser?.uid ?: "", items, total)
+                                        navController.navigate("Order")
                                     }
-                                }
-                            )
+                                )
+                            }
+                            composable(
+                                route = "ProductDetails/{productId}",
+                                arguments = listOf(navArgument("productId") { type = NavType.StringType })
+                            ) { backStackEntry ->
+                                val productId = backStackEntry.arguments?.getString("productId") ?: ""
+                                ProductDetailScreen(
+                                    productId = productId,
+                                    viewModel = detailViewModel,
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
+                            composable("Order") {
+                                OrderScreen(
+                                    userId = currentUser?.uid ?: "",
+                                    viewModel = orderViewModel,
+                                    onBackClick = {
+                                        navController.navigate("Home") {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = false
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                            composable("Profile") {
+                                ProfileScreen(
+                                    viewModel = profileViewModel,
+                                    onOrdersClick = {
+                                        navController.navigate("Order")
+                                    },
+                                    onSignOutSuccess = {
+                                        authViewModel.signOut()
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -140,4 +224,3 @@ fun PlaceholderScreen(title: String) {
         }
     }
 }
-

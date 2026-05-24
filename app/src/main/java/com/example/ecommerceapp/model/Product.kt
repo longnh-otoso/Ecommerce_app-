@@ -1,12 +1,3 @@
 package com.example.ecommerceapp.model
 
-data class Product(
-    val id: String = "",
-    val name: String = "",
-    val description: String = "",
-    val price: Double = 0.0,
-    val imageUrl: String = "",
-    val categoryId: String = "",
-    val rating: Double = 0.0,
-    val discount: Int = 0
-)
+typealias Product = com.example.ecommerceapp.domain.model.Product
