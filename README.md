@@ -9,16 +9,25 @@ An Android E-Commerce application built using **Kotlin**, **Jetpack Compose**, a
 ## 📱 Screenshots & Demo / Hình ảnh & Video chạy thử
 
 ### Video Demo
-<video src="image/video.mp4" controls width="100%" style="max-height: 480px; border-radius: 16.dp; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></video>
+<video src="./image/video.mp4" controls width="100%" style="max-height: 480px; border-radius: 12px;"></video>
 
-### App Screenshots / Hình ảnh giao diện ứng dụng
-
-| Screen / Giao diện | Screen / Giao diện |
-| :---: | :---: |
-| <img src="image/anh0.jpg" width="300" /><br>**Login & Registration (Đăng nhập & Đăng ký)** | <img src="image/anh1.jpg" width="300" /><br>**Home Screen & Searching (Trang chủ & Tìm kiếm)** |
-| <img src="image/anh2.jpg" width="300" /><br>**Product Details & Favorite (Chi tiết & Yêu thích)** | <img src="image/anh3.jpg" width="300" /><br>**Shopping Cart (Giỏ hàng của tôi)** |
-| <img src="image/anh4.jpg" width="300" /><br>**Checkout & Payment (Giao diện Thanh toán)** | <img src="image/anh5.jpg" width="300" /><br>**Edit User Profile (Thông tin cá nhân)** |
-| <img src="image/anh6.jpg" width="300" /><br>**WishList (Danh sách Yêu thích)** | <img src="image/anh7.jpg" width="300" /><br>**Order History & Payment Status (Đơn hàng đã đặt)** |
+### Screenshots / Hình ảnh giao diện
+- **Đăng nhập & Đăng ký / Login & Registration**:
+  ![Login](./image/anh0.jpg)
+- **Trang chủ & Tìm kiếm / Home Screen & Search**:
+  ![Home](./image/anh1.jpg)
+- **Chi tiết sản phẩm / Product Details**:
+  ![Details](./image/anh2.jpg)
+- **Giỏ hàng / Shopping Cart**:
+  ![Cart](./image/anh3.jpg)
+- **Thanh toán / Checkout**:
+  ![Checkout](./image/anh4.jpg)
+- **Hồ sơ & Chỉnh sửa / User Profile**:
+  ![Profile](./image/anh5.jpg)
+- **Sản phẩm yêu thích / Wishlist**:
+  ![Wishlist](./image/anh6.jpg)
+- **Lịch sử đơn hàng / Order History**:
+  ![Orders](./image/anh7.jpg)
 
 ---
 
