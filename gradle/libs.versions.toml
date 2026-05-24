@@ -11,7 +11,8 @@ composeBom = "2026.02.01"
 hilt = "2.59.2"
 room = "2.8.4"
 retrofit = "3.0.0"
-firebaseBom = "33.1.0"
+firebaseBom = "34.13.0"
+firebaseAuthKtx = "24.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

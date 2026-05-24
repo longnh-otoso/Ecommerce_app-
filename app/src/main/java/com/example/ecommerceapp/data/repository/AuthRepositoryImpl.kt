@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,31 +32,14 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
         val auth = firebaseAuth
         return if (auth != null) {
             try {
-                val result = kotlin.coroutines.resumeWithExceptionOrReturn {
-                    // Firebase tasks can be converted with await() from kotlinx-coroutines-play-services
-                    // But to avoid extra dependency issues, we can use listeners or task.isSuccessful checks
-                }
-                // To keep it simple and compile-safe without play-services-tasks dependency,
-                // we can perform a callback wrapper or use the task directly:
-                var user: User? = null
-                var error: Exception? = null
-                
-                val task = auth.signInWithEmailAndPassword(email, password)
-                while (!task.isComplete) {
-                    kotlinx.coroutines.delay(50)
-                }
-                
-                if (task.isSuccessful) {
-                    val firebaseUser = task.result?.user
-                    user = User(
-                        uid = firebaseUser?.uid ?: "",
-                        name = firebaseUser?.displayName ?: "User",
-                        email = firebaseUser?.email ?: email
-                    )
-                    Result.success(user)
-                } else {
-                    Result.failure(task.exception ?: Exception("Login failed"))
-                }
+                val task = auth.signInWithEmailAndPassword(email, password).await()
+                val firebaseUser = task.user
+                val user = User(
+                    uid = firebaseUser?.uid ?: "",
+                    name = firebaseUser?.displayName ?: "User",
+                    email = firebaseUser?.email ?: email
+                )
+                Result.success(user)
             } catch (e: Exception) {
                 Result.failure(e)
             }
@@ -76,22 +60,14 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
         val auth = firebaseAuth
         return if (auth != null) {
             try {
-                val task = auth.createUserWithEmailAndPassword(email, password)
-                while (!task.isComplete) {
-                    kotlinx.coroutines.delay(50)
-                }
-                
-                if (task.isSuccessful) {
-                    val firebaseUser = task.result?.user
-                    val user = User(
-                        uid = firebaseUser?.uid ?: "",
-                        name = name,
-                        email = firebaseUser?.email ?: email
-                    )
-                    Result.success(user)
-                } else {
-                    Result.failure(task.exception ?: Exception("Registration failed"))
-                }
+                val task = auth.createUserWithEmailAndPassword(email, password).await()
+                val firebaseUser = task.user
+                val user = User(
+                    uid = firebaseUser?.uid ?: "",
+                    name = name,
+                    email = firebaseUser?.email ?: email
+                )
+                Result.success(user)
             } catch (e: Exception) {
                 Result.failure(e)
             }

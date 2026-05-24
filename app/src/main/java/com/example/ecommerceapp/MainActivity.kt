@@ -60,42 +60,24 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                if (currentUser == null) {
-                    // Auth Gate: user is not signed in
-                    NavHost(
-                        navController = navController,
-                        startDestination = "Login"
-                    ) {
-                        composable("Login") {
-                            LoginScreen(
-                                viewModel = authViewModel,
-                                onNavigateToRegister = {
-                                    navController.navigate("Register")
-                                },
-                                onLoginSuccess = {} // StateFlow auto-triggers recomposition
-                            )
-                        }
-                        composable("Register") {
-                            RegisterScreen(
-                                viewModel = authViewModel,
-                                onNavigateToLogin = {
-                                    navController.popBackStack()
-                                },
-                                onRegisterSuccess = {} // StateFlow auto-triggers recomposition
-                            )
-                        }
-                    }
-                } else {
-                    // Main App Gate: user is signed in
-                    val mainTabs = listOf("Home", "Categories", "WishList", "Cart", "Profile")
-                    val showBottomBar = currentRoute in mainTabs
+                val mainTabs = listOf("Home", "Categories", "WishList", "Cart", "Profile")
+                val showBottomBar = currentRoute in mainTabs
 
-                    Scaffold(
-                        bottomBar = {
-                            if (showBottomBar) {
-                                BottomNavigationBar(
-                                    currentRoute = currentRoute,
-                                    onNavigate = { route ->
+                Scaffold(
+                    bottomBar = {
+                        if (showBottomBar) {
+                            BottomNavigationBar(
+                                currentRoute = currentRoute,
+                                onNavigate = { route ->
+                                    if (route == "Profile" && currentUser == null) {
+                                        navController.navigate("Login") {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    } else {
                                         navController.navigate(route) {
                                             popUpTo(navController.graph.startDestinationId) {
                                                 saveState = true
@@ -104,94 +86,138 @@ class MainActivity : ComponentActivity() {
                                             restoreState = true
                                         }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
-                    ) { paddingValues ->
-                        val homeViewModel: HomeViewModel = hiltViewModel()
-                        val detailViewModel: ProductDetailViewModel = hiltViewModel()
-                        val cartViewModel: CartViewModel = hiltViewModel()
-                        val orderViewModel: OrderViewModel = hiltViewModel()
-                        val profileViewModel: ProfileViewModel = hiltViewModel()
+                    }
+                ) { paddingValues ->
+                    val homeViewModel: HomeViewModel = hiltViewModel()
+                    val detailViewModel: ProductDetailViewModel = hiltViewModel()
+                    val cartViewModel: CartViewModel = hiltViewModel()
+                    val orderViewModel: OrderViewModel = hiltViewModel()
+                    val profileViewModel: ProfileViewModel = hiltViewModel()
 
-                        NavHost(
-                            navController = navController,
-                            startDestination = "Home",
-                            modifier = Modifier.padding(paddingValues)
-                        ) {
-                            composable("Home") {
-                                HomeScreen(
-                                    viewModel = homeViewModel,
-                                    onProductClick = { productId ->
-                                        navController.navigate("ProductDetails/$productId")
-                                    },
-                                    onCartClick = {
-                                        navController.navigate("Cart")
-                                    },
-                                    onProfileClick = {
+                    NavHost(
+                        navController = navController,
+                        startDestination = "Home",
+                        modifier = Modifier.padding(paddingValues)
+                    ) {
+                        composable("Home") {
+                            HomeScreen(
+                                viewModel = homeViewModel,
+                                onProductClick = { productId ->
+                                    navController.navigate("ProductDetails/$productId")
+                                },
+                                onCartClick = {
+                                    navController.navigate("Cart")
+                                },
+                                onProfileClick = {
+                                    if (currentUser == null) {
+                                        navController.navigate("Login")
+                                    } else {
                                         navController.navigate("Profile")
                                     }
-                                )
-                            }
-                            composable("Categories") {
-                                PlaceholderScreen(title = "Categories")
-                            }
-                            composable("WishList") {
-                                PlaceholderScreen(title = "WishList")
-                            }
-                            composable("Cart") {
-                                CartScreen(
-                                    viewModel = cartViewModel,
-                                    onBackClick = {
-                                        if (!navController.popBackStack()) {
-                                            navController.navigate("Home")
-                                        }
-                                    },
-                                    onCheckoutClick = {
+                                }
+                            )
+                        }
+                        composable("Login") {
+                            LoginScreen(
+                                viewModel = authViewModel,
+                                onNavigateToRegister = {
+                                    navController.navigate("Register")
+                                },
+                                onLoginSuccess = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                },
+                                onBackClick = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                }
+                            )
+                        }
+                        composable("Register") {
+                            RegisterScreen(
+                                viewModel = authViewModel,
+                                onNavigateToLogin = {
+                                    navController.popBackStack()
+                                },
+                                onRegisterSuccess = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                }
+                            )
+                        }
+                        composable("Categories") {
+                            PlaceholderScreen(title = "Categories")
+                        }
+                        composable("WishList") {
+                            PlaceholderScreen(title = "WishList")
+                        }
+                        composable("Cart") {
+                            CartScreen(
+                                viewModel = cartViewModel,
+                                onBackClick = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                },
+                                onCheckoutClick = {
+                                    if (currentUser == null) {
+                                        navController.navigate("Login")
+                                    } else {
                                         val items = cartViewModel.cartItems.value
                                         val total = cartViewModel.totalAmount.value
                                         orderViewModel.checkout(currentUser?.uid ?: "", items, total)
                                         navController.navigate("Order")
                                     }
-                                )
-                            }
-                            composable(
-                                route = "ProductDetails/{productId}",
-                                arguments = listOf(navArgument("productId") { type = NavType.StringType })
-                            ) { backStackEntry ->
-                                val productId = backStackEntry.arguments?.getString("productId") ?: ""
-                                ProductDetailScreen(
-                                    productId = productId,
-                                    viewModel = detailViewModel,
-                                    onBackClick = {
-                                        navController.popBackStack()
-                                    }
-                                )
-                            }
-                            composable("Order") {
-                                OrderScreen(
-                                    userId = currentUser?.uid ?: "",
-                                    viewModel = orderViewModel,
-                                    onBackClick = {
-                                        navController.navigate("Home") {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                inclusive = false
-                                            }
+                                }
+                            )
+                        }
+                        composable(
+                            route = "ProductDetails/{productId}",
+                            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+                            ProductDetailScreen(
+                                productId = productId,
+                                viewModel = detailViewModel,
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                        composable("Order") {
+                            OrderScreen(
+                                userId = currentUser?.uid ?: "",
+                                viewModel = orderViewModel,
+                                onBackClick = {
+                                    navController.navigate("Home") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            inclusive = false
                                         }
                                     }
-                                )
-                            }
-                            composable("Profile") {
-                                ProfileScreen(
-                                    viewModel = profileViewModel,
-                                    onOrdersClick = {
-                                        navController.navigate("Order")
-                                    },
-                                    onSignOutSuccess = {
-                                        authViewModel.signOut()
+                                }
+                            )
+                        }
+                        composable("Profile") {
+                            ProfileScreen(
+                                viewModel = profileViewModel,
+                                onOrdersClick = {
+                                    navController.navigate("Order")
+                                },
+                                onSignOutSuccess = {
+                                    authViewModel.signOut()
+                                    navController.navigate("Home") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            inclusive = false
+                                        }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }
