@@ -9,9 +9,9 @@ An Android E-Commerce application built using **Kotlin**, **Jetpack Compose**, a
 ## 📱 Screenshots & Demo / Hình ảnh & Video chạy thử
 
 ### Video Demo
-<video src="image/video.mp4" controls width="100%" style="max-height: 400px; border-radius: 12px;"></video>
+<video src="./image/video.mp4" controls width="100%" style="max-height: 480px; border-radius: 12px;"></video>
 
-[👉 Bấm vào đây để xem trực tiếp Video Demo / Click here to open the Video Demo](image/video.mp4)
+[👉 Nhấn vào đây để xem trực tiếp video / Click here to view video directly](./image/video.mp4)
 
 ### Screenshots / Hình ảnh giao diện (Width: 200px)
 <img src="./image/anh0.jpg" width="200" alt="Login" /> <img src="./image/anh1.jpg" width="200" alt="Home" /> <img src="./image/anh2.jpg" width="200" alt="Details" /> <img src="./image/anh3.jpg" width="200" alt="Cart" /> <img src="./image/anh4.jpg" width="200" alt="Checkout" /> <img src="./image/anh5.jpg" width="200" alt="Profile" /> <img src="./image/anh6.jpg" width="200" alt="Wishlist" /> <img src="./image/anh7.jpg" width="200" alt="Orders" />
