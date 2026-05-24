@@ -9,25 +9,12 @@ An Android E-Commerce application built using **Kotlin**, **Jetpack Compose**, a
 ## 📱 Screenshots & Demo / Hình ảnh & Video chạy thử
 
 ### Video Demo
-<video src="./image/video.mp4" controls width="100%" style="max-height: 480px; border-radius: 12px;"></video>
+<video src="image/video.mp4" controls width="100%" style="max-height: 400px; border-radius: 12px;"></video>
 
-### Screenshots / Hình ảnh giao diện
-- **Đăng nhập & Đăng ký / Login & Registration**:
-  ![Login](./image/anh0.jpg)
-- **Trang chủ & Tìm kiếm / Home Screen & Search**:
-  ![Home](./image/anh1.jpg)
-- **Chi tiết sản phẩm / Product Details**:
-  ![Details](./image/anh2.jpg)
-- **Giỏ hàng / Shopping Cart**:
-  ![Cart](./image/anh3.jpg)
-- **Thanh toán / Checkout**:
-  ![Checkout](./image/anh4.jpg)
-- **Hồ sơ & Chỉnh sửa / User Profile**:
-  ![Profile](./image/anh5.jpg)
-- **Sản phẩm yêu thích / Wishlist**:
-  ![Wishlist](./image/anh6.jpg)
-- **Lịch sử đơn hàng / Order History**:
-  ![Orders](./image/anh7.jpg)
+[👉 Bấm vào đây để xem trực tiếp Video Demo / Click here to open the Video Demo](image/video.mp4)
+
+### Screenshots / Hình ảnh giao diện (Width: 200px)
+<img src="./image/anh0.jpg" width="200" alt="Login" /> <img src="./image/anh1.jpg" width="200" alt="Home" /> <img src="./image/anh2.jpg" width="200" alt="Details" /> <img src="./image/anh3.jpg" width="200" alt="Cart" /> <img src="./image/anh4.jpg" width="200" alt="Checkout" /> <img src="./image/anh5.jpg" width="200" alt="Profile" /> <img src="./image/anh6.jpg" width="200" alt="Wishlist" /> <img src="./image/anh7.jpg" width="200" alt="Orders" />
 
 ---
 
