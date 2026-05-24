@@ -66,9 +66,11 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     // Dagger Hilt (with KSP)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+    implementation("androidx.hilt:hilt-lifecycle-viewmodel-compose:1.3.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     // Room (with KSP)
     implementation(libs.room.runtime)
