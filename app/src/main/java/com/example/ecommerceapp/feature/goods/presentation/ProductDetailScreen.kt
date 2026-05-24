@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,11 @@ fun ProductDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val quantity by viewModel.quantity.collectAsState()
 
+    val sharedPreferences = remember { context.getSharedPreferences("user_profile_prefs", Context.MODE_PRIVATE) }
+    var isFavorite by remember(productId) {
+        mutableStateOf(sharedPreferences.getStringSet("wishlist_items", emptySet())?.contains(productId) == true)
+    }
+
     LaunchedEffect(productId) {
         viewModel.loadProduct(productId)
     }
@@ -48,6 +56,28 @@ fun ProductDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Quay lại")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            val currentSet = sharedPreferences.getStringSet("wishlist_items", emptySet())?.toMutableSet() ?: mutableSetOf()
+                            if (isFavorite) {
+                                currentSet.remove(productId)
+                                Toast.makeText(context, "Đã xóa khỏi danh sách yêu thích", Toast.LENGTH_SHORT).show()
+                            } else {
+                                currentSet.add(productId)
+                                Toast.makeText(context, "Đã thêm vào danh sách yêu thích", Toast.LENGTH_SHORT).show()
+                            }
+                            sharedPreferences.edit().putStringSet("wishlist_items", currentSet).apply()
+                            isFavorite = !isFavorite
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Yêu thích",
+                            tint = if (isFavorite) Color.Red else Color.Gray
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

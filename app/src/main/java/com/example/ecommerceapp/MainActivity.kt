@@ -1,6 +1,12 @@
 package com.example.ecommerceapp
 
 import android.os.Bundle
+import android.content.Context
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,7 +44,11 @@ import com.example.ecommerceapp.feature.goods.presentation.ProductDetailScreen
 import com.example.ecommerceapp.feature.goods.presentation.ProductDetailViewModel
 import com.example.ecommerceapp.feature.home.presentation.HomeScreen
 import com.example.ecommerceapp.feature.home.presentation.HomeViewModel
+import com.example.ecommerceapp.screens.categories.CategoryListScreen
+import com.example.ecommerceapp.screens.categories.CategoryProductsScreen
+import com.example.ecommerceapp.screens.wishlist.WishListScreen
 import com.example.ecommerceapp.screens.home.BottomNavigationBar
+import com.example.ecommerceapp.feature.order.presentation.CheckoutScreen
 import com.example.ecommerceapp.feature.order.presentation.OrderScreen
 import com.example.ecommerceapp.feature.order.presentation.OrderViewModel
 import com.example.ecommerceapp.feature.profile.presentation.ProfileScreen
@@ -54,6 +64,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EcommerceAppTheme {
                 val authViewModel: AuthViewModel = hiltViewModel()
+                val cartViewModel: CartViewModel = hiltViewModel()
                 val currentUser by authViewModel.currentUser.collectAsState()
 
                 val navController = rememberNavController()
@@ -63,11 +74,34 @@ class MainActivity : ComponentActivity() {
                 val mainTabs = listOf("Home", "Categories", "WishList", "Cart", "Profile")
                 val showBottomBar = currentRoute in mainTabs
 
+                val cartItems by cartViewModel.cartItems.collectAsState()
+                val cartBadgeCount = cartItems.sumOf { it.quantity }
+
+                val context = LocalContext.current
+                val sharedPreferences = remember { context.getSharedPreferences("user_profile_prefs", Context.MODE_PRIVATE) }
+                var wishlistBadgeCount by remember {
+                    mutableStateOf(sharedPreferences.getStringSet("wishlist_items", emptySet())?.size ?: 0)
+                }
+
+                DisposableEffect(sharedPreferences) {
+                    val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+                        if (key == "wishlist_items") {
+                            wishlistBadgeCount = prefs.getStringSet("wishlist_items", emptySet())?.size ?: 0
+                        }
+                    }
+                    sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+                    onDispose {
+                        sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+                    }
+                }
+
                 Scaffold(
                     bottomBar = {
                         if (showBottomBar) {
                             BottomNavigationBar(
                                 currentRoute = currentRoute,
+                                wishlistBadgeCount = wishlistBadgeCount,
+                                cartBadgeCount = cartBadgeCount,
                                 onNavigate = { route ->
                                     if (route == "Profile" && currentUser == null) {
                                         navController.navigate("Login") {
@@ -93,7 +127,6 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     val homeViewModel: HomeViewModel = hiltViewModel()
                     val detailViewModel: ProductDetailViewModel = hiltViewModel()
-                    val cartViewModel: CartViewModel = hiltViewModel()
                     val orderViewModel: OrderViewModel = hiltViewModel()
                     val profileViewModel: ProfileViewModel = hiltViewModel()
 
@@ -152,10 +185,45 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("Categories") {
-                            PlaceholderScreen(title = "Categories")
+                            CategoryListScreen(
+                                onBackClick = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                },
+                                onCategoryClick = { category ->
+                                    navController.navigate("CategoryProducts/${category.name}")
+                                }
+                            )
+                        }
+                        composable(
+                            route = "CategoryProducts/{categoryName}",
+                            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+                            CategoryProductsScreen(
+                                categoryName = categoryName,
+                                viewModel = homeViewModel,
+                                onProductClick = { productId ->
+                                    navController.navigate("ProductDetails/$productId")
+                                },
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
                         composable("WishList") {
-                            PlaceholderScreen(title = "WishList")
+                            WishListScreen(
+                                viewModel = homeViewModel,
+                                onProductClick = { productId ->
+                                    navController.navigate("ProductDetails/$productId")
+                                },
+                                onBackClick = {
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home")
+                                    }
+                                }
+                            )
                         }
                         composable("Cart") {
                             CartScreen(
@@ -169,10 +237,25 @@ class MainActivity : ComponentActivity() {
                                     if (currentUser == null) {
                                         navController.navigate("Login")
                                     } else {
-                                        val items = cartViewModel.cartItems.value
-                                        val total = cartViewModel.totalAmount.value
-                                        orderViewModel.checkout(currentUser?.uid ?: "", items, total)
-                                        navController.navigate("Order")
+                                        navController.navigate("Checkout")
+                                    }
+                                }
+                            )
+                        }
+                        composable("Checkout") {
+                            CheckoutScreen(
+                                cartItems = cartViewModel.cartItems.collectAsState().value,
+                                totalAmount = cartViewModel.totalAmount.collectAsState().value,
+                                userId = currentUser?.uid ?: "",
+                                orderViewModel = orderViewModel,
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onCheckoutSuccess = {
+                                    navController.navigate("Order") {
+                                        popUpTo("Cart") {
+                                            inclusive = true
+                                        }
                                     }
                                 }
                             )
@@ -195,9 +278,11 @@ class MainActivity : ComponentActivity() {
                                 userId = currentUser?.uid ?: "",
                                 viewModel = orderViewModel,
                                 onBackClick = {
-                                    navController.navigate("Home") {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            inclusive = false
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate("Home") {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = false
+                                            }
                                         }
                                     }
                                 }

@@ -61,13 +61,16 @@ fun HomeScreen(
             // Categories Header
             SectionTitle("Categories", "See All") {}
 
-            val categories = listOf(
-                Category(1, "Electronics", "https://cdn-icons-png.flaticon.com/128/716/716429.png"),
-                Category(2, "Clothing", "https://cdn-icons-png.flaticon.com/128/2503/2503380.png"),
-                Category(3, "Home", "https://cdn-icons-png.flaticon.com/128/619/619153.png"),
-                Category(4, "Shoes", "https://cdn-icons-png.flaticon.com/128/2741/2741298.png"),
-                Category(5, "Beauty", "https://cdn-icons-png.flaticon.com/128/3163/3163200.png")
-            )
+            val categories = remember {
+                listOf(
+                    Category(0, "Tất cả", "https://cdn-icons-png.flaticon.com/128/17/17704.png"),
+                    Category(1, "Electronics", "https://cdn-icons-png.flaticon.com/128/716/716429.png"),
+                    Category(2, "Clothing", "https://cdn-icons-png.flaticon.com/128/2503/2503380.png"),
+                    Category(3, "Home", "https://cdn-icons-png.flaticon.com/128/619/619153.png"),
+                    Category(4, "Shoes", "https://cdn-icons-png.flaticon.com/128/2741/2741298.png"),
+                    Category(5, "Beauty", "https://cdn-icons-png.flaticon.com/128/3163/3163200.png")
+                )
+            }
             val selectedCategory = remember { mutableStateOf(categories[0]) }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -114,8 +117,22 @@ fun HomeScreen(
                     }
                 }
                 is HomeUiState.Success -> {
-                    val filteredProducts = state.products.filter {
-                        it.name.contains(searchQuery.value, ignoreCase = true)
+                    val filteredProducts = remember(state.products, searchQuery.value, selectedCategory.value) {
+                        state.products.filter { product ->
+                            val matchesSearch = product.name.contains(searchQuery.value, ignoreCase = true) ||
+                                    product.description.contains(searchQuery.value, ignoreCase = true)
+
+                            val matchesCategory = when (selectedCategory.value.name) {
+                                "Tất cả" -> true
+                                "Electronics" -> product.category in listOf("smartphones", "laptops", "tablets", "electronics", "mobile-accessories")
+                                "Clothing" -> product.category in listOf("clothing", "womens-dresses", "womens-clothing", "mens-shirts", "mens-clothing", "tops")
+                                "Home" -> product.category in listOf("home-decoration", "furniture", "home", "kitchen-accessories")
+                                "Shoes" -> product.category in listOf("shoes", "mens-shoes", "womens-shoes")
+                                "Beauty" -> product.category in listOf("beauty", "fragrances", "skin-care")
+                                else -> product.category.contains(selectedCategory.value.name, ignoreCase = true)
+                            }
+                            matchesSearch && matchesCategory
+                        }
                     }
 
                     if (filteredProducts.isEmpty()) {

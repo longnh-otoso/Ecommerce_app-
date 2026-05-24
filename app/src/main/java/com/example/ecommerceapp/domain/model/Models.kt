@@ -7,7 +7,8 @@ data class Product(
     val price: Double = 0.0,
     val imageUrl: String = "",
     val rating: Double = 0.0,
-    val discount: Int = 0
+    val discount: Int = 0,
+    val category: String = ""
 )
 
 data class CartItem(
@@ -27,5 +28,7 @@ data class Order(
     val items: List<CartItem> = emptyList(),
     val totalAmount: Double = 0.0,
     val timestamp: Long = 0,
-    val status: String = "Pending"
+    val status: String = "Pending",
+    val paymentMethod: String = "COD",
+    val paymentStatus: String = "Chưa thanh toán"
 )

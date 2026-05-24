@@ -22,23 +22,28 @@ class OrderRepositoryImpl @Inject constructor() : OrderRepository {
         }
     }
 
-    override suspend fun placeOrder(userId: String, items: List<CartItem>, totalAmount: Double): Result<Order> {
+    override suspend fun placeOrder(
+        userId: String,
+        items: List<CartItem>,
+        totalAmount: Double,
+        paymentMethod: String,
+        paymentStatus: String
+    ): Result<Order> {
         val order = Order(
             id = UUID.randomUUID().toString(),
             userId = userId,
             items = items,
             totalAmount = totalAmount,
             timestamp = System.currentTimeMillis(),
-            status = "Processing"
+            status = "Processing",
+            paymentMethod = paymentMethod,
+            paymentStatus = paymentStatus
         )
         
         val db = firestore
         return if (db != null) {
             try {
                 // Submit order to Firestore
-                var success = false
-                var error: Exception? = null
-                
                 val task = db.collection("orders").document(order.id).set(order)
                 while (!task.isComplete) {
                     kotlinx.coroutines.delay(50)

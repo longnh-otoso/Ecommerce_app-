@@ -22,6 +22,7 @@ sealed interface AuthUiState {
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getAuthStateUseCase: GetAuthStateUseCase
@@ -34,10 +35,8 @@ class AuthViewModel @Inject constructor(
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     init {
-        // Initial check for current user
         _currentUser.value = getCurrentUserUseCase()
         
-        // Listen to active auth changes
         viewModelScope.launch {
             getAuthStateUseCase().collect { user ->
                 _currentUser.value = user
@@ -82,6 +81,20 @@ class AuthViewModel @Inject constructor(
                 }
                 .onFailure { exception ->
                     _uiState.value = AuthUiState.Error(exception.message ?: "Đăng ký thất bại")
+                }
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            signInWithGoogleUseCase(idToken)
+                .onSuccess { user ->
+                    _currentUser.value = user
+                    _uiState.value = AuthUiState.Success(user)
+                }
+                .onFailure { exception ->
+                    _uiState.value = AuthUiState.Error(exception.message ?: "Đăng nhập Google thất bại")
                 }
         }
     }

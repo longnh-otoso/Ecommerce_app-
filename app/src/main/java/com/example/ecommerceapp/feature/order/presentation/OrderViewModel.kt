@@ -51,7 +51,13 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-    fun checkout(userId: String, items: List<CartItem>, totalAmount: Double) {
+    fun checkout(
+        userId: String,
+        items: List<CartItem>,
+        totalAmount: Double,
+        paymentMethod: String = "COD",
+        paymentStatus: String = "Chưa thanh toán"
+    ) {
         if (items.isEmpty()) {
             _uiState.value = OrderUiState.Error("Không có sản phẩm nào để thanh toán")
             return
@@ -59,7 +65,7 @@ class OrderViewModel @Inject constructor(
         
         viewModelScope.launch {
             _uiState.value = OrderUiState.Loading
-            placeOrderUseCase(userId, items, totalAmount)
+            placeOrderUseCase(userId, items, totalAmount, paymentMethod, paymentStatus)
                 .onSuccess { order ->
                     clearCartUseCase() // Clear local room cart
                     _uiState.value = OrderUiState.Success(order)

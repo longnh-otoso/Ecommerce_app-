@@ -1,5 +1,6 @@
 package com.example.ecommerceapp.feature.order.presentation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,9 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.rememberAsyncImagePainter
 import com.example.ecommerceapp.domain.model.Order
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -118,11 +121,21 @@ fun OrderScreen(
     }
 }
 
+fun getStatusColors(status: String): Pair<Color, Color> {
+    return when (status.lowercase()) {
+        "completed", "success", "thành công" -> Pair(Color(0xFFE8F5E9), Color(0xFF2E7D32)) // Green bg/text
+        "processing", "đang xử lý", "pending" -> Pair(Color(0xFFE3F2FD), Color(0xFF1565C0)) // Blue bg/text
+        "cancelled", "đã hủy" -> Pair(Color(0xFFFFEBEE), Color(0xFFC62828)) // Red bg/text
+        else -> Pair(Color(0xFFECEFF1), Color(0xFF37474F))
+    }
+}
+
 @Composable
 fun OrderItemCard(order: Order) {
     val date = Date(order.timestamp)
     val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = format.format(date)
+    val (statusBg, statusText) = getStatusColors(order.status)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -141,28 +154,95 @@ fun OrderItemCard(order: Order) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                Text(
-                    text = order.status,
-                    color = Color(0xFF1565C0),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(statusBg)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = order.status,
+                        color = statusText,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Thời gian: $dateString",
                 fontSize = 12.sp,
                 color = Color.Gray
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Render brief items list
-            order.items.forEach { item ->
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "${item.product.name} x${item.quantity}",
-                    fontSize = 14.sp,
+                    text = when (order.paymentMethod) {
+                        "COD" -> "Thanh toán khi nhận hàng (COD)"
+                        "BANK" -> "Chuyển khoản ngân hàng"
+                        "MOMO" -> "Ví điện tử MoMo"
+                        "CARD" -> "Thẻ Visa/Mastercard"
+                        else -> "COD"
+                    },
+                    fontSize = 12.sp,
                     color = Color.DarkGray
                 )
+                Text(
+                    text = order.paymentStatus,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (order.paymentStatus == "Đã thanh toán") Color(0xFF2E7D32) else Color(0xFFC62828)
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Render detailed items list with images
+            order.items.forEach { item ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFF9F9F9))
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(item.product.imageUrl),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = item.product.name,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Số lượng: x${item.quantity}",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Text(
+                        text = String.format(Locale.getDefault(), "$%.2f", item.product.price * item.quantity),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
+                }
             }
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))

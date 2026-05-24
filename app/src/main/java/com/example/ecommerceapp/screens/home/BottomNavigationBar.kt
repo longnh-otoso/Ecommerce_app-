@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BottomNavigationBar(
     currentRoute: String?,
+    wishlistBadgeCount: Int,
+    cartBadgeCount: Int,
     onNavigate: (String) -> Unit
 ){
 
@@ -40,13 +42,13 @@ fun BottomNavigationBar(
             title = "WishList",
             icon = Icons.Default.Favorite,
             route = "WishList",
-            badgeCount = 5
+            badgeCount = wishlistBadgeCount
         ),
         BottomNavigationItem(
             title = "Cart",
             icon = Icons.Default.ShoppingCart,
             route = "Cart",
-            badgeCount = 3
+            badgeCount = cartBadgeCount
         ),
         BottomNavigationItem(
             title = "Profile",

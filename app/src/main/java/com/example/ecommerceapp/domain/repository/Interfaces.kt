@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
     suspend fun login(email: String, password: String): Result<User>
     suspend fun register(email: String, name: String, password: String): Result<User>
+    suspend fun signInWithGoogle(idToken: String): Result<User>
     suspend fun signOut()
     fun getCurrentUser(): User?
     fun getAuthState(): Flow<User?>
@@ -28,6 +29,12 @@ interface CartRepository {
 }
 
 interface OrderRepository {
-    suspend fun placeOrder(userId: String, items: List<CartItem>, totalAmount: Double): Result<Order>
+    suspend fun placeOrder(
+        userId: String,
+        items: List<CartItem>,
+        totalAmount: Double,
+        paymentMethod: String = "COD",
+        paymentStatus: String = "Chưa thanh toán"
+    ): Result<Order>
     suspend fun getOrders(userId: String): Result<List<Order>>
 }
